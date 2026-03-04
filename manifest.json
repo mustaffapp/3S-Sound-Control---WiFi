@@ -1,6 +1,10 @@
 {
-  "short_name": "3S SOUND",
   "name": "3S Sound Control",
+  "short_name": "3S Sound",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#FF0000",
   "icons": [
     {
       "src": "3S_logo.png",
@@ -12,9 +16,5 @@
       "sizes": "512x512",
       "type": "image/png"
     }
-  ],
-  "start_url": "./index.html",
-  "display": "standalone",
-  "theme_color": "#FF0000",
-  "background_color": "#000000"
+  ]
 }
