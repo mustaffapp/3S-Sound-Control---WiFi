@@ -138,10 +138,13 @@
             {id:2, name:"Sistem", on:"5", off:"6", state:false, icon:"system_icon.png"}
         ];
 
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(err => console.log("SW Error:", err));
+        }
+
         function render() {
             const grid = document.getElementById('mainGrid');
             const dashStatus = document.getElementById('dashboardConnStatus');
-            
             if(isConnected) {
                 dashStatus.innerText = "BAĞLI";
                 dashStatus.className = "conn-status-text online";
@@ -149,7 +152,6 @@
                 dashStatus.innerText = "BAĞLI DEĞİL";
                 dashStatus.className = "conn-status-text offline";
             }
-
             grid.innerHTML = config.map(s => {
                 let isThisLocked = isWaiting && (s.id === activeTargetId || (activeTargetId === 2 && (s.id === 0 || s.id === 1)));
                 let offlineClass = !isConnected ? 'offline-mode' : '';
@@ -166,7 +168,6 @@
                     </div>
                 </div>`;
             }).join('');
-            
             renderSettings();
             updateHeaderIcons();
         }
@@ -181,7 +182,6 @@
                         <div class="val-cell"><div style="font-size:9px;color:var(--sub)">KAPALI</div><input type="text" value="${s.off}" oninput="updateConfig(${i},'off',this.value)"></div>
                     </div>
                 </div>`).join('');
-            
             const palette = document.getElementById('themePalette');
             const cur = localStorage.getItem('theme') || '#FF0000';
             palette.innerHTML = colors.map(c => `<div class="color-dot ${c === cur ? 'selected' : ''}" style="background:${c}" onclick="applyTheme('${c}')"></div>`).join('');
