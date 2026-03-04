@@ -10,154 +10,234 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#FF0000">
     <style>
-        @font-face { font-family: '3S-Special'; src: url('myFont.otf') format('opentype'); }
+        @font-face { font-family: '3S-Special'; src: url('myFont.otf') format('opentype'); font-weight: normal; font-style: normal; }
         * { box-sizing: border-box; }
         :root { --theme: #FF0000; --bg: #000000; --card: #1c1c1e; --text: #ffffff; --sub: #98989d; --border: #333333; }
         body { margin: 0; background: var(--bg); color: var(--text); font-family: -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; display: flex; justify-content: center; height: 100vh; overflow: hidden; background-image: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), url('note_bg.jpg'); background-size: cover; background-position: center; }
-        #app { width: 100%; max-width: 440px; background: rgba(0,0,0,0.6); position: relative; display: flex; flex-direction: column; height: 100%; }
-        .header { padding: 40px 24px 20px; display: flex; justify-content: space-between; align-items: center; height: 90px; }
-        .page-header { padding: 40px 24px 20px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; height: 90px; }
-        h1 { font-family: '3S-Special', sans-serif; font-size: 26px; margin: 0; text-transform: uppercase; }
+        #app { width: 100%; max-width: 440px; background: rgba(0,0,0,0.6); position: relative; display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+        
+        .header-standard { 
+            padding: 40px 24px 20px; 
+            display: grid; 
+            grid-template-columns: 80px 1fr 80px; 
+            align-items: center; 
+            height: 100px; 
+            z-index: 101;
+            text-align: center;
+        }
+
+        h1 { font-family: '3S-Special', sans-serif; font-size: 26px; margin: 0; text-transform: uppercase; letter-spacing: 1px; }
         h1 span { color: #FF0000; }
-        .page { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 100; overflow-y: auto; background: rgba(0,0,0,0.9); padding-bottom: 20px; }
-        .page.active { display: block; }
+        .icon-btn { width: 100%; border: none; background: transparent; display: flex; align-items: center; cursor: pointer; padding: 0; }
+        .icon-btn.right { justify-content: flex-end; }
+        .icon-btn.left { justify-content: flex-start; }
+        .icon-btn img { width: 30px; height: 30px; transition: 0.3s; }
+        .back-text { color: var(--theme); font-weight: 700; font-size: 14px; letter-spacing: 0.5px; }
+        
+        .page { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 100; overflow-y: auto; background: rgba(0,0,0,0.9); }
+        .page.active { display: flex; flex-direction: column; }
+        
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; padding: 10px 24px; }
-        .box { background: rgba(28,28,30,0.8); border-radius: 28px; padding: 24px; aspect-ratio: 1/0.95; display: flex; flex-direction: column; justify-content: space-between; border: 2px solid transparent; cursor: pointer; transition: 0.2s; }
+        .box { background: rgba(28, 28, 30, 0.8); border-radius: 28px; padding: 24px; aspect-ratio: 1 / 0.95; display: flex; flex-direction: column; justify-content: space-between; border: 2px solid transparent; cursor: pointer; transition: 0.2s; position: relative; }
         .box.active { border-color: var(--theme); }
+        .box.active .device-icon { filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8)); }
         .box.locked { opacity: 0.8; cursor: wait; pointer-events: none; }
-        .toggle-switch { width: 50px; height: 30px; background: #3a3a3c; border-radius: 15px; position: relative; transition: 0.3s; }
+        .box.offline-mode { opacity: 0.4; pointer-events: none; filter: grayscale(1); }
+        
+        .box-top { display: flex; justify-content: space-between; align-items: flex-start; height: 60px; }
+        .device-icon { width: 60px; height: 60px; object-fit: contain; transition: 0.3s; }
+        .toggle-switch { position: relative; width: 50px; height: 30px; background: #3a3a3c; border-radius: 15px; transition: 0.3s; }
         .toggle-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 26px; height: 26px; background: white; border-radius: 50%; transition: 0.3s; }
         .box.active .toggle-switch { background: var(--theme); }
         .box.active .toggle-switch::after { transform: translateX(20px); }
+        
+        .box-info { display: flex; flex-direction: column; justify-content: flex-end; }
+        .box-info div:first-child { font-size: 14px; font-weight: 700; }
+        .box-info div:last-child { font-size: 8px; opacity: 0.6; margin-top: 2px; }
+        
         .spinner { display: none; width: 24px; height: 24px; border: 3px solid rgba(255,255,255,0.2); border-top: 3px solid var(--theme); border-radius: 50%; animation: spin 0.8s linear infinite; }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .box.locked .spinner { display: block; }
         .box.locked .toggle-switch { display: none; }
+        
+        .settings-group { margin: 20px 24px; }
+        .group-label { color: var(--sub); font-size: 10px; margin-bottom: 8px; font-weight: 700; text-transform: uppercase; }
+        .settings-card { background: var(--card); border-radius: 16px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 12px; }
+        .settings-row { display: flex; padding: 14px 18px; border-bottom: 1px solid var(--border); justify-content: space-between; align-items: center; background: rgba(255, 255, 255, 0.03); }
+        .val-grid { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--border); background: rgba(0, 0, 0, 0.1); }
+        .val-cell { padding: 12px 18px; border-right: 1px solid var(--border); }
+        input { background: none; border: none; color: var(--text); font-size: 16px; width: 100%; text-align: right; outline: none; }
         .color-dot { width: 26px; height: 26px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; }
-        .color-dot.selected { border-color: white; transform: scale(1.1); }
-        .action-btn { width: 100%; background: var(--theme); color: white; border: none; border-radius: 12px; height: 50px; font-weight: 700; cursor: pointer; }
+        .color-dot.selected { border-color: var(--text); transform: scale(1.1); }
+        
+        .action-btn { width: 100%; background: rgba(28, 28, 30, 0.8); border: 2px solid var(--theme); color: var(--theme); border-radius: 12px; height: 50px; font-weight: 700; font-size: 16px; cursor: pointer; transition: 0.3s; margin-top: 20px; }
+        
+        #statusText { font-size: 14px; margin-top: 20px; color: #8e8e93; -webkit-text-stroke: 0.1px white; line-height: 1.4; }
+        
+        .footer-status { margin-top: auto; padding: 30px 24px; text-align: center; }
+        .conn-status-text { font-size: 11px; font-weight: 800; letter-spacing: 1px; }
+        .conn-status-text.online { color: var(--theme); }
+        .conn-status-text.offline { color: #8e8e93; -webkit-text-stroke: 0.1px white; }
     </style>
 </head>
 <body>
     <div id="app">
         <div id="dashboard" class="page active">
-            <div class="header">
-                <div onclick="openPage('settings')"><img src="settings_icon.png" width="30"></div>
+            <div class="header-standard">
+                <div class="icon-btn left" onclick="openPage('settings')"><img src="settings_icon.png"></div>
                 <h1><span>3S</span> SOUND</h1>
-                <div onclick="openPage('connStatus')"><img id="wifiHeaderIcon" src="con_icon.png" width="30" style="filter:grayscale(1)"></div>
+                <div class="icon-btn right" onclick="openPage('connStatus')"><img id="wifiHeaderIcon" src="con_icon.png"></div>
             </div>
             <div class="grid" id="mainGrid"></div>
+            <div class="footer-status">
+                <div id="dashboardConnStatus" class="conn-status-text"></div>
+            </div>
         </div>
 
         <div id="settings" class="page">
-            <div class="page-header">
-                <span style="color:var(--theme); cursor:pointer;" onclick="render();openPage('dashboard')">‹ Geri</span>
-                <span style="font-weight:700;">AYARLAR</span>
-                <span></span>
+            <div class="header-standard">
+                <div class="icon-btn left" onclick="render();openPage('dashboard')"><span class="back-text">‹ GERİ</span></div>
+                <div style="font-weight:700; font-size:18px; letter-spacing:1px;">AYARLAR</div>
+                <div class="icon-btn right" style="visibility:hidden;"></div>
             </div>
-            <div id="settingsList" style="padding: 24px;"></div>
-            <div style="padding: 0 24px;">
-                <div style="color:var(--sub); font-size:10px; margin-bottom:8px;">TEMA</div>
-                <div id="themePalette" style="display:flex; gap:10px; background:var(--card); padding:15px; border-radius:16px;"></div>
+            <div id="settingsList" class="settings-group"></div>
+            <div class="settings-group">
+                <div class="group-label">GÖRÜNÜM</div>
+                <div class="settings-card">
+                    <div class="settings-row">
+                        <span>Tema</span>
+                        <div style="display:flex; gap:10px;" id="themePalette"></div>
+                    </div>
+                </div>
             </div>
         </div>
 
         <div id="connStatus" class="page">
-            <div class="page-header">
-                <span onclick="openPage('dashboard')">‹ Geri</span>
-                <span style="font-weight:700;">BAĞLANTI</span>
-                <span></span>
+            <div class="header-standard">
+                <div class="icon-btn left" onclick="openPage('dashboard')"><span class="back-text">‹ GERİ</span></div>
+                <div style="font-weight:700; font-size:18px; letter-spacing:1px;">BAĞLANTI</div>
+                <div class="icon-btn right" style="visibility:hidden;"></div>
             </div>
-            <div style="padding:40px 24px; text-align:center;">
-                <img src="con_icon.png" width="80" style="margin-bottom:20px;">
-                <button class="action-btn" onclick="checkConnection()">BAĞLAN</button>
-                <div id="statusText" style="margin-top:20px; font-size:14px; color:#8e8e93;">Kontrol ediliyor...</div>
+            <div style="padding:0 24px; text-align: center; flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+                <div style="margin-bottom: 20px;"><img src="con_icon.png" style="width:100px; transition: 0.3s;" id="bigConnIcon"></div>
+                <div style="width:100%; max-width:280px;">
+                    <button class="action-btn" onclick="checkConnection()">BAĞLAN</button>
+                    <div id="statusText">Kontrol ediliyor...</div>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        const colors = ["#FF0000", "#007AFF", "#34C759", "#BF00FF", "#FFD600", "#E0E0E0"];
+        const colors = ["#FF0000", "#007AFF", "#34C759", "#BF00FF", "#FF9500", "#E0E0E0"];
         const ESP_IP = "http://192.168.4.1";
-        let isConnected = false, isWaiting = false;
-
+        let isConnected = false, isWaiting = false, activeTargetId = null;
         let config = JSON.parse(localStorage.getItem('3s_config_v2')) || [
             {id:0, name:"Pandizot", on:"1", off:"2", state:false, icon:"speaker_icon.png"},
             {id:1, name:"LED", on:"3", off:"4", state:false, icon:"light_icon.png"},
             {id:2, name:"Sistem", on:"5", off:"6", state:false, icon:"system_icon.png"}
         ];
 
+        function render() {
+            const grid = document.getElementById('mainGrid');
+            const dashStatus = document.getElementById('dashboardConnStatus');
+            
+            if(isConnected) {
+                dashStatus.innerText = "BAĞLI";
+                dashStatus.className = "conn-status-text online";
+            } else {
+                dashStatus.innerText = "BAĞLI DEĞİL";
+                dashStatus.className = "conn-status-text offline";
+            }
+
+            grid.innerHTML = config.map(s => {
+                let isThisLocked = isWaiting && (s.id === activeTargetId || (activeTargetId === 2 && (s.id === 0 || s.id === 1)));
+                let offlineClass = !isConnected ? 'offline-mode' : '';
+                return `
+                <div class="box ${s.state ? 'active' : ''} ${isThisLocked ? 'locked' : ''} ${offlineClass}" onclick="toggleSwitch(${s.id})">
+                    <div class="box-top">
+                        <img src="${s.icon}" class="device-icon">
+                        <div class="toggle-switch"></div>
+                        <div class="spinner"></div>
+                    </div>
+                    <div class="box-info">
+                        <div>${s.name}</div>
+                        <div>${!isConnected ? 'BAĞLANTI YOK' : (s.state ? 'AÇIK' : 'KAPALI')}</div>
+                    </div>
+                </div>`;
+            }).join('');
+            
+            renderSettings();
+            updateHeaderIcons();
+        }
+
+        function renderSettings() {
+            const sList = document.getElementById('settingsList');
+            sList.innerHTML = `<div class="group-label">FONKSİYON</div>` + config.map((s, i) => `
+                <div class="settings-card">
+                    <div class="settings-row"><span>Anahtar</span><input type="text" value="${s.name}" oninput="updateConfig(${i},'name',this.value)"></div>
+                    <div class="val-grid">
+                        <div class="val-cell"><div style="font-size:9px;color:var(--sub)">AÇIK</div><input type="text" value="${s.on}" oninput="updateConfig(${i},'on',this.value)"></div>
+                        <div class="val-cell"><div style="font-size:9px;color:var(--sub)">KAPALI</div><input type="text" value="${s.off}" oninput="updateConfig(${i},'off',this.value)"></div>
+                    </div>
+                </div>`).join('');
+            
+            const palette = document.getElementById('themePalette');
+            const cur = localStorage.getItem('theme') || '#FF0000';
+            palette.innerHTML = colors.map(c => `<div class="color-dot ${c === cur ? 'selected' : ''}" style="background:${c}" onclick="applyTheme('${c}')"></div>`).join('');
+        }
+
         async function checkConnection() {
             const st = document.getElementById('statusText');
-            st.innerText = "Sorgulanıyor...";
             try {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 2500);
+                setTimeout(() => controller.abort(), 2000);
                 const response = await fetch(`${ESP_IP}/status`, { signal: controller.signal });
                 const data = await response.json();
-                
-                // ESP'den gelen gerçek durumları config'e işle
-                config[0].state = data.lid;
-                config[1].state = data.light;
-                config[2].state = (data.lid && data.light);
-                
                 isConnected = true;
-                st.innerText = "Bağlantı Başarılı";
+                config[0].state = data.lid === true;
+                config[1].state = data.light === true;
+                config[2].state = (config[0].state && config[1].state);
+                if(st) { st.innerText = "Bağlı"; st.style.color = "white"; st.style.webkitTextStroke = "0.5px white"; }
             } catch (e) {
                 isConnected = false;
-                st.innerText = "3S Sound Control ağına bağlanın.";
+                if(st) { st.innerText = "Lütfen 3S Sound Control ağına bağlanın."; st.style.color = "#8e8e93"; st.style.webkitTextStroke = "0.1px white"; }
             }
             render();
         }
 
-        function render() {
-            const grid = document.getElementById('mainGrid');
-            grid.innerHTML = config.map(s => `
-                <div class="box ${s.state ? 'active' : ''} ${isWaiting ? 'locked' : ''}" onclick="toggleSwitch(${s.id})">
-                    <div style="display:flex; justify-content:space-between;">
-                        <img src="${s.icon}" width="60" height="60">
-                        <div class="toggle-switch"></div>
-                        <div class="spinner"></div>
-                    </div>
-                    <div>
-                        <div style="font-size:14px; font-weight:700;">${s.name}</div>
-                        <div style="font-size:10px; opacity:0.6;">${s.state ? 'AÇIK' : 'KAPALI'}</div>
-                    </div>
-                </div>`).join('') + `
-                <div class="box ${isConnected ? 'active' : ''}" onclick="openPage('connStatus')">
-                    <img src="con_icon.png" width="60">
-                    <div style="font-size:14px; font-weight:700;">Bağlantı</div>
-                </div>`;
-
-            document.getElementById('wifiHeaderIcon').style.filter = isConnected ? `drop-shadow(0 0 5px var(--theme))` : 'grayscale(1)';
-            
-            const cur = localStorage.getItem('theme') || '#FF0000';
-            document.getElementById('themePalette').innerHTML = colors.map(c => `<div class="color-dot ${c === cur ? 'selected' : ''}" style="background:${c}" onclick="applyTheme('${c}')"></div>`).join('');
-        }
-
         async function toggleSwitch(id) {
-            if (isWaiting) return;
+            if (isWaiting || !isConnected) return;
+            activeTargetId = id;
             isWaiting = true;
-            const target = config[id];
-            const newState = !target.state;
-            const cmd = newState ? target.on : target.off;
-            
             render();
             try {
-                await fetch(`${ESP_IP}/komut?val=${cmd}`);
-                target.state = newState;
-                if (id === 2) { config[0].state = newState; config[1].state = newState; }
-                else { config[2].state = (config[0].state && config[1].state); }
-            } catch (e) { console.log("Hata"); }
-            
-            setTimeout(() => { isWaiting = false; render(); }, id === 0 || id === 2 ? 1600 : 300);
+                const cmd = config[id].state ? config[id].off : config[id].on;
+                await fetch(`${ESP_IP}/komut?val=${cmd}`, { mode: 'no-cors' });
+                await checkConnection();
+            } catch (e) { console.error("Hata"); }
+            isWaiting = false;
+            activeTargetId = null;
+            render();
         }
 
+        function updateConfig(id, key, val) { config[id][key] = val; localStorage.setItem('3s_config_v2', JSON.stringify(config)); }
         function applyTheme(c) { localStorage.setItem('theme', c); document.documentElement.style.setProperty('--theme', c); render(); }
-        function openPage(id) { document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); document.getElementById(id).classList.add('active'); }
         
+        function updateHeaderIcons() { 
+            const wifiIcon = document.getElementById('wifiHeaderIcon');
+            const bigIcon = document.getElementById('bigConnIcon');
+            if(isConnected) {
+                wifiIcon.style.filter = "drop-shadow(0 0 5px #ffffff)";
+                if(bigIcon) bigIcon.style.filter = "drop-shadow(0 0 15px #ffffff)";
+            } else {
+                wifiIcon.style.filter = "grayscale(1)";
+                if(bigIcon) bigIcon.style.filter = "none";
+            }
+        }
+
+        function openPage(id) { document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); document.getElementById(id).classList.add('active'); }
         window.onload = () => { applyTheme(localStorage.getItem('theme') || '#FF0000'); checkConnection(); };
-        if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
     </script>
 </body>
 </html>
